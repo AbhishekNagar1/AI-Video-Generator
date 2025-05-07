@@ -1,0 +1,14 @@
+file 'D:\AI_Video_Generator\backend\data\temp\slide_1.png'
+duration 13.772571428571428
+file 'D:\AI_Video_Generator\backend\data\temp\slide_2.png'
+duration 13.772571428571428
+file 'D:\AI_Video_Generator\backend\data\temp\slide_3.png'
+duration 13.772571428571428
+file 'D:\AI_Video_Generator\backend\data\temp\slide_4.png'
+duration 13.772571428571428
+file 'D:\AI_Video_Generator\backend\data\temp\slide_5.png'
+duration 13.772571428571428
+file 'D:\AI_Video_Generator\backend\data\temp\slide_6.png'
+duration 13.772571428571428
+file 'D:\AI_Video_Generator\backend\data\temp\slide_7.png'
+duration 13.772571428571428

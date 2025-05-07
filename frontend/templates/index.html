@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adura AI Video Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <div class="container">
+        <div class="card">
+            <h1>Adura AI Video Generator</h1>
+            <form id="videoForm">
+                <div class="form-group">
+                    <label for="topic">Topic:</label>
+                    <input type="text" id="topic" name="topic" required>
+                </div>
+                <div class="form-group">
+                    <label for="duration">Duration (minutes):</label>
+                    <input type="number" id="duration" name="duration" min="1" max="10" value="5" required>
+                </div>
+                <button type="submit">Generate Video</button>
+            </form>
+        </div>
+
+        <div class="loading" id="loading">
+            <p>Generating your video... This may take a few minutes.</p>
+            <div class="spinner"></div>
+        </div>
+
+        <div class="video-container" id="videoContainer" style="display: none;">
+            <h2>Your Generated Video</h2>
+            <video id="generatedVideo" controls>
+                Your browser does not support the video tag.
+            </video>
+        </div>
+    </div>
+
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+        
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+
+        function updateThemeIcon(theme) {
+            themeIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        // Video generation functionality
+        const form = document.getElementById('videoForm');
+        const loading = document.getElementById('loading');
+        const videoContainer = document.getElementById('videoContainer');
+        const video = document.getElementById('generatedVideo');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const data = {
+                topic: formData.get('topic'),
+                duration: parseInt(formData.get('duration'))
+            };
+
+            loading.classList.add('active');
+            videoContainer.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/video/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to generate video');
+                }
+
+                const result = await response.json();
+                video.src = result.video_url;
+                videoContainer.style.display = 'block';
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to generate video. Please try again.');
+            } finally {
+                loading.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html> 
