@@ -25,8 +25,8 @@ An AI-powered tool that generates educational videos based on user input, featur
 
 ```
 .
-├── backend/           # Flask backend API
-├── frontend/         # HTML/CSS/JS frontend
+├── backend/         # Flask backend API
+├── frontend/        # HTML/CSS/JS frontend
 ├── env/             # Environment variables
 ├── data/            # Generated content storage
 ├── docs/            # Documentation
