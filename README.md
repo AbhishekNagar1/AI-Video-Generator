@@ -1,6 +1,7 @@
 # AI Educational Video Generator
 
 An AI-powered tool that generates educational videos based on user input, featuring dynamic presentations, human-like voiceovers, and synchronized content.
+Demo Link: https://drive.google.com/file/d/1QMGzcwZa6ghGn4ciNXwBfA6fWbNRi9VX/view?usp=sharing
 
 ## 🌟 Features
 
