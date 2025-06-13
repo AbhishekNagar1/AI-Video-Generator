@@ -36,6 +36,12 @@ Demo Link: https://drive.google.com/file/d/1QMGzcwZa6ghGn4ciNXwBfA6fWbNRi9VX/vie
 
 ## 🚀 Getting Started
 
+<div align="center">
+  <a href="https://license-instructions.netlify.app/" target="_blank">
+    <img src="https://img.shields.io/badge/🚨-READ%20BEFORE%20FORKING-red?style=for-the-badge&labelColor=darkred" alt="Read Before Forking">
+  </a>
+</div>
+
 1. Clone the repository
 2. Set up environment variables in `env/.env`
 3. Install dependencies:
