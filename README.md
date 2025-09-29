@@ -1,7 +1,9 @@
 # AI Educational Video Generator (Adura AI Engine)
 
 An AI-powered tool that generates educational videos based on user input, featuring dynamic presentations, human-like voiceovers, and synchronized content.
+
 Demo Link: https://drive.google.com/file/d/1QMGzcwZa6ghGn4ciNXwBfA6fWbNRi9VX/view?usp=sharing
+
 Link to Research: https://www.researchgate.net/publication/395773519_AI_Powered_Educational_Video_Engine_An_End-to-End_Automated_Pipeline
 
 ## 🌟 Features
