@@ -36,8 +36,10 @@ Link to Research: https://www.researchgate.net/publication/395773519_AI_Powered_
 ├── docs/            # Documentation
 └── tests/           # Test cases
 ```
+## ⚠️ **Important Notice:**  
+This repository is **private and sensitive**. Forking, redistributing, or using any part of this codebase **without prior written permission from the author is strictly prohibited** and will be considered a violation of rights. You **must request and obtain approval** before any forking or derivative use.
 
-## 🚀 Getting Started
+## 🚀 Getting Started  
 
 <div align="center">
   <a href="https://license-instructions.netlify.app/" target="_blank">
