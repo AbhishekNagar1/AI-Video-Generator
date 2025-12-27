@@ -1,0 +1,37 @@
+# Runtime / generated data
+backend/data/
+backend/data/**
+*.mp4
+*.wav
+*.png
+*.jpg
+*.pptx
+*.zip
+
+# Database
+*.db
+
+# Logs
+*.log
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Env
+.env
+backend/env/.env
+
+# Virtual env
+venv/
+.venv/
+
+# Node
+node_modules/
+package-lock.json
+
+# OS
+.DS_Store
+
+# IDE
+.idea/

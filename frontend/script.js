@@ -1,3 +1,9 @@
+// Set API base URL based on environment
+const API_BASE =
+  location.hostname === "localhost"
+    ? "http://localhost:5000"
+    : "https://adura-ai-577547589884.asia-south1.run.app/";
+
 document.addEventListener('DOMContentLoaded', () => {
     const videoForm = document.getElementById('videoForm');
     const statusContainer = document.getElementById('status');
@@ -7,15 +13,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const newVideoBtn = document.getElementById('newVideoBtn');
     const progressBar = document.querySelector('.progress');
 
-    // API endpoints
-    const API_BASE_URL = 'http://localhost:5000/api';
+    // API endpoints - using dynamic API_BASE
+    const API_BASE_URL = `${API_BASE}/api`;
     const CONTENT_ENDPOINT = `${API_BASE_URL}/content/generate`;
     const VIDEO_ENDPOINT = `${API_BASE_URL}/video/generate`;
 
     // Check API health
     async function checkAPIHealth() {
         try {
-            const response = await fetch('http://localhost:5000/health');
+            const response = await fetch(`${API_BASE}/health`);
             if (!response.ok) {
                 throw new Error('API is not responding');
             }
@@ -96,13 +102,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 statusContainer.classList.add('hidden');
                 resultContainer.classList.remove('hidden');
                 
-                // Set video source
+                // Define videoUrl before using it
                 const videoUrl = `${API_BASE_URL}/video/download/${videoData.video_path}`;
-                videoPlayer.src = videoUrl;
+                
+                // Set video source using the proper method
+                const video = document.getElementById("videoPlayer");
+
+                // reset player
+                video.pause();
+                video.removeAttribute("src");
+                video.load();
+
+                // assign source
+                video.src = videoUrl;
+                video.load();
                 
                 // Set up download button
                 downloadBtn.onclick = () => {
-                    window.location.href = videoUrl;
+                    window.open(videoUrl, "_blank");
                 };
             }, 1000);
 
@@ -127,4 +144,4 @@ document.addEventListener('DOMContentLoaded', () => {
         videoForm.reset();
         videoPlayer.src = '';
     }
-}); 
+});

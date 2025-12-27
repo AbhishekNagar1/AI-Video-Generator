@@ -1,9 +1,6 @@
 import os
-# Set environment variables for ffmpeg-python to use custom binaries
-os.environ["FFMPEG_BINARY"] = r"D:\AI_Video_Generator\backend\ffmpeg-master-latest-win64-gpl-shared\bin\ffmpeg.exe"
-os.environ["FFPROBE_BINARY"] = r"D:\AI_Video_Generator\backend\ffmpeg-master-latest-win64-gpl-shared\bin\ffprobe.exe"
 import ffmpeg
-import shutil
+import shutil  # Added for clearing temp directory
 from datetime import datetime
 from typing import Tuple, List
 from pathlib import Path
@@ -16,15 +13,17 @@ import subprocess
 
 logger = logging.getLogger(__name__)
 
-FFMPEG_BIN = os.environ["FFMPEG_BINARY"]
-FFPROBE_BIN = os.environ["FFPROBE_BINARY"]
+# Use environment variables for FFmpeg paths, with fallback to system installation
+FFMPEG_BIN = os.environ.get("FFMPEG_BINARY", "ffmpeg")
+FFPROBE_BIN = os.environ.get("FFPROBE_BINARY", "ffprobe")
 
 class VideoGenerator:
     def __init__(self):
         self.base_dir = Path(__file__).resolve().parent.parent
         self.output_dir = self.base_dir / 'data' / 'videos'
         self.temp_dir = self.base_dir / 'data' / 'temp'
-        self.logo_path = Path(r"D:\AI_Video_Generator\frontend\assets\logo.png")
+        # Use relative path for logo instead of hardcoded Windows path
+        self.logo_path = self.base_dir.parent / 'frontend' / 'assets' / 'logo.png'
         
         # Create necessary directories
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -38,14 +37,22 @@ class VideoGenerator:
 
     def _check_ffmpeg_installation(self):
         """Check if FFmpeg is installed and accessible."""
-        if not os.path.exists(FFMPEG_BIN):
+        try:
+            result = subprocess.run([FFMPEG_BIN, "-version"], 
+                                  capture_output=True, text=True, timeout=10)
+            ffmpeg_info = (
+                result.stdout.split('\n')[0] 
+                if result.stdout 
+                else 'FFmpeg version info'
+            )
+            logger.info(f"FFmpeg found: {ffmpeg_info}")
+        except (subprocess.TimeoutExpired, FileNotFoundError):
             error_msg = (
-                f"FFmpeg binary not found at {FFMPEG_BIN}. "
-                "Please check the path and ensure ffmpeg.exe is present."
+                f"FFmpeg binary not accessible: {FFMPEG_BIN}. "
+                "Please ensure ffmpeg is installed and accessible in the environment."
             )
             logger.error(error_msg)
             raise RuntimeError(error_msg)
-        logger.info(f"FFmpeg found at: {FFMPEG_BIN}")
 
     def create_video(self, presentation_path: str, audio_path: str) -> str:
         """
@@ -59,6 +66,11 @@ class VideoGenerator:
             str: Path to the generated video file
         """
         try:
+            # Clear temp directory to prevent image mixups between videos
+            if self.temp_dir.exists():
+                shutil.rmtree(self.temp_dir)
+            self.temp_dir.mkdir(parents=True, exist_ok=True)
+
             # Convert paths to absolute paths if they're relative
             presentation_path = self._ensure_absolute_path(presentation_path)
             audio_path = self._ensure_absolute_path(audio_path)
@@ -105,12 +117,18 @@ class VideoGenerator:
 
     def _convert_pptx_to_images(self, pptx_path: str) -> List[str]:
         """Convert PowerPoint slides to images with Unsplash backgrounds and styled text."""
+        import textwrap  # Added for text wrapping
+        
         UNSPLASH_ACCESS_KEY = "ZTZxqGOEqUt7juPx84I3SuRS6eqBmCGRKhOMRv15vTo"
         unsplash_url = "https://api.unsplash.com/photos/random"
-        cache_dir = self.temp_dir / "unsplash_cache"
-        cache_dir.mkdir(exist_ok=True)
 
         def fetch_unsplash_image(query, slide_idx):
+            # Make Unsplash cache prompt-specific to prevent image mixups
+            # Remove invalid characters for Windows file systems (<>:"/\|?*)
+            safe_prompt = query.strip().lower().replace(" ", "_").replace(":", "_").replace('"', '_').replace('<', '_').replace('>', '_').replace('|', '_').replace('?', '_').replace('*', '_')[:50]
+            cache_dir = self.temp_dir / f"unsplash_{safe_prompt}"
+            cache_dir.mkdir(exist_ok=True)
+            
             cache_path = cache_dir / f"slide_{slide_idx+1}.jpg"
             if cache_path.exists():
                 return str(cache_path)
@@ -131,20 +149,70 @@ class VideoGenerator:
                 logger.warning(f"Failed to fetch Unsplash image for '{query}': {e}")
             return None
 
+        def wrap_text(text, font, max_width):
+            """Wrap text to fit within the given width."""
+            if not text:
+                return []
+            
+            lines = []
+            paragraphs = text.split('\n')
+            
+            for paragraph in paragraphs:
+                # Try to wrap the text using textwrap
+                words = paragraph.split(' ')
+                current_line = ""
+                
+                for word in words:
+                    test_line = current_line + word + " "
+                    
+                    # Get text width using the font
+                    try:
+                        # Use ImageDraw to measure text width
+                        temp_img = Image.new('RGB', (1, 1))
+                        temp_draw = ImageDraw.Draw(temp_img)
+                        bbox = temp_draw.textbbox((0, 0), test_line, font=font)
+                        text_width = bbox[2] - bbox[0]
+                    except:
+                        # Fallback if font measurement fails
+                        text_width = len(test_line) * 10  # Rough estimate
+                    
+                    if text_width <= max_width:
+                        current_line = test_line
+                    else:
+                        if current_line:
+                            lines.append(current_line.strip())
+                        current_line = word + " "
+                
+                if current_line:
+                    lines.append(current_line.strip())
+            
+            return lines
+
         try:
             logger.info(f"Converting PowerPoint to images: {pptx_path}")
             prs = Presentation(pptx_path)
             image_paths = []
             
-            # Try to use a default font
+            # Force specific pixel sizes for consistent rendering across environments
+            # Use larger font sizes that will render consistently on both local and cloud
             try:
-                font = ImageFont.truetype("arial.ttf", 56)
-                small_font = ImageFont.truetype("arial.ttf", 36)
-                slide_num_font = ImageFont.truetype("arial.ttf", 28)
+                # Try to use arial.ttf first, then fallback to other fonts, and finally default
+                font = ImageFont.truetype("arial.ttf", 72)  # Larger size for better visibility
+                small_font = ImageFont.truetype("arial.ttf", 48)  # Larger size for better visibility
+                slide_num_font = ImageFont.truetype("arial.ttf", 32)  # Larger size for better visibility
             except Exception:
-                font = ImageFont.load_default()
-                small_font = ImageFont.load_default()
-                slide_num_font = ImageFont.load_default()
+                try:
+                    # Try alternative font paths that might be available in cloud environments
+                    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 72)
+                    small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 48)
+                    slide_num_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 32)
+                except Exception:
+                    # Final fallback to default font with size approximation
+                    logger.warning("Could not load specific fonts, using default fonts")
+                    # Use ImageFont.load_default() which should be available everywhere
+                    font = ImageFont.load_default()
+                    small_font = ImageFont.load_default()
+                    slide_num_font = ImageFont.load_default()
 
             # Extract topic from first slide title
             topic = None
@@ -187,16 +255,28 @@ class VideoGenerator:
                 img = Image.alpha_composite(img.convert('RGBA'), overlay)
                 draw = ImageDraw.Draw(img)
                 
-                # Draw title (large, bold, colored)
+                # Draw title (large, bold, colored) with text wrapping
                 y = 80
                 if title:
-                    draw.text((80, y), title, font=font, fill='#4F8EF7')
-                    y += 90
+                    # Wrap title text to fit within slide width
+                    title_lines = wrap_text(title, font, 1700)  # Leave some margin
+                    for line in title_lines:
+                        draw.text((80, y), line, font=font, fill='#4F8EF7')
+                        y += 90  # Adjust spacing based on font size
                 
-                # Draw content lines (normal, dark)
-                for line in content:
-                    draw.text((100, y), line, font=small_font, fill='#222')
-                    y += 55
+                # Draw content lines (normal, dark) with text wrapping
+                for content_item in content:
+                    content_lines = wrap_text(content_item, small_font, 1700)  # Leave some margin
+                    for line in content_lines:
+                        draw.text((100, y), line, font=small_font, fill='#222')
+                        y += 55  # Adjust spacing based on font size
+                        
+                        # Check if we're approaching the bottom of the slide
+                        if y > 900:  # Leave space for slide number
+                            logger.warning(f"Content approaching bottom of slide {i+1}, truncating...")
+                            break
+                    if y > 900:
+                        break
                 
                 # Draw slide number (bottom right)
                 slide_num = f"Slide {i+1}"

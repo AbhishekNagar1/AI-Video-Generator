@@ -1,0 +1,13 @@
+gunicorn
+Pillow>=9.0
+moviepy
+python-pptx
+flask
+flask-cors
+python-dotenv
+google-generativeai
+gTTS
+requests
+tenacity>=8.2.0
+google-cloud-texttospeech
+ffmpeg-python

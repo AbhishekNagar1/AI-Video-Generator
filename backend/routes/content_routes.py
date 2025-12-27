@@ -45,10 +45,10 @@ def generate_content():
     except FileNotFoundError as e:
         logger.error(f"File not found: {str(e)}")
         return jsonify({
-            'error': str(e)
+            'error': 'File not found during processing'
         }), 404
     except Exception as e:
         logger.error(f"Error generating content: {str(e)}")
         return jsonify({
-            'error': str(e)
-        }), 500 
+            'error': 'Something went wrong while generating the content. Please try again.'
+        }), 500

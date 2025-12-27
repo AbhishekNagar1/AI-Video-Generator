@@ -1,0 +1,12 @@
+.git
+.gitignore
+.venv
+venv
+__pycache__/
+*.mp4
+*.wav
+data/
+tests/
+docs/
+.idea
+.env

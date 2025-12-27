@@ -53,12 +53,12 @@ def generate_video():
     except FileNotFoundError as e:
         logger.error(f"File not found: {str(e)}")
         return jsonify({
-            'error': str(e)
+            'error': 'File not found during processing'
         }), 404
     except Exception as e:
         logger.error(f"Error generating video: {str(e)}")
         return jsonify({
-            'error': str(e)
+            'error': 'Something went wrong while generating the video. Please try again.'
         }), 500
 
 @bp.route('/download/<path:filename>')
@@ -81,10 +81,10 @@ def download_video(filename):
     except FileNotFoundError as e:
         logger.error(f"File not found: {str(e)}")
         return jsonify({
-            'error': str(e)
+            'error': 'File not found during download'
         }), 404
     except Exception as e:
         logger.error(f"Error downloading video: {str(e)}")
         return jsonify({
-            'error': str(e)
-        }), 500 
+            'error': 'Something went wrong during download. Please try again.'
+        }), 500
